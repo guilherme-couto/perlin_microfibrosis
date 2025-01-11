@@ -95,13 +95,15 @@ for fibro_typename in fibros_typenames:
             images = []
             for param_value in param_samples:
                 images.append(imageio.v2.imread(f'./patterns/{fibro_typename}/{param_name}/samples/{(param_value):.2f}_{m+1}.png'))
-            imageio.v2.mimsave(f'./patterns/{fibro_typename}/{param_name}/pattern_{m+1}.gif', images, duration=0.5)
+            imageio.v2.mimsave(f'./patterns/{fibro_typename}/{param_name}/pattern_{m+1}.gif', images, duration=0.75, loop=0)
+            print(f'Generated gif for {fibro_typename} pattern {m+1} with parameter {param_name}')
 
         # Generate a gif fixing the param value and changing the pattern number
         for param_value in param_samples:
             images = []
             for m in range(num_patterns):
                 images.append(imageio.v2.imread(f'./patterns/{fibro_typename}/{param_name}/samples/{(param_value):.2f}_{m+1}.png'))
-            imageio.v2.mimsave(f'./patterns/{fibro_typename}/{param_name}/param_{(param_value):.2f}.gif', images, duration=0.5)
+            imageio.v2.mimsave(f'./patterns/{fibro_typename}/{param_name}/param_{(param_value):.2f}.gif', images, duration=0.75, loop=0)
+            print(f'Generated gif for {fibro_typename} with parameter {param_name} with value {(param_value):.2f}')
         
          

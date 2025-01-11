@@ -1,0 +1,40 @@
+% PARAMETER INFORMATION:
+1 - FIBRENESS (f): The extent to which patterns exhibit long, thin fibres
+    aligned in consistent directions
+    ::: If set to NaN, a pattern without fibres will be created :::
+2 - FIBRE SEPARATION (L): The average spacing between fibres (in units
+    matching those used in input mesh)
+3 - PATCHINESS (d): The extent of inconsistency in pattern density (high
+    patchiness will produce distinct regions of higher and lower density)
+4 - FEATURE SIZE (lb): The overall size of obstacle features in the mesh (in
+    units matching the mesh)
+5 - ROUGHNESS (gamma): The roughness of feature edges (values from [0,1], may
+    cause issues for values of precisely 0 or 1)
+6 - PATCH SIZE (ld): The size of regions over which density varies (with
+    extent according to PATCHINESS)
+7 - FIBRE ALIGNMENT (R): The extent to which non-fibre features are aligned
+    to the fibre direction (i.e. extent of feature anisotropy)
+8 - DIRECTION (phi): An angle (in radians) defining the orientation of fibres
+    and/or feature anisotropy
+
+% PAPER PARAMETERS
+interstitial -> [0.3, 0.31, 0.32, 0.24, 0.96, 4.67, 1.89, 0.59341] -> density = 0.096
+compact -> [NaN, NaN, 0.44, 0.96, 0.59, 2.03, 2.47, -0.15708] -> density = 0.472
+diffuse -> [NaN, NaN, 0.49, 0.07, 0.44, 1.22, 2.17, 0.19199] -> density = 0.22
+patchy -> [0.38, 0.31, 0.42, 0.32, 0.78, 2.1, 2.5, 1.18680] -> density = 0.269
+
+% PARAMETER RANGES
+f -> [0.0, 0.4]
+L -> [0.3, 2.0]
+d -> [0.0, 0.5]
+lb -> [0.01, 2.0]
+gamma -> [0.0, 0.99]
+ld -> [1, 8]
+R -> [0.5, 50.0]
+phi -> [-pi/2, pi/2]
+
+% PARAMETER AND RELATED NOISEFIELD
+Fibrotic Obstacles / Base Noise (Nb) -> lb, R, gamma
+Density Variation (Nd) -> ld
+Fibre Selection (F) -> L, phi 
+Weighted Combination (G) -> f, d

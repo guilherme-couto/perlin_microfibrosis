@@ -1,0 +1,2 @@
+octave --no-gui -q -f ./script_with_args.m 
+generatePatterns([0.38, 0.31, 0.42, 0.32, 0.78, 2.1, 2.5, 1.1868], 0.269, 4)

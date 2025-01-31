@@ -37,7 +37,7 @@ R_points = [ [ cos(direction) sin(direction) ]; [-sin(direction), cos(direction)
 % Create new permutation tables from the provided by applying it to itself
 for k = 1:size(Ps,1)
     Ps2(k,:) = Ps(k,Ps(k,:)+1);
-    Ps3(k,:) = Ps2(k,Ps2(k,:)+1);
+    % Ps3(k,:) = Ps2(k,Ps2(k,:)+1);
 end
 % disp(Ps(1,1:10));
 % disp(Ps2(1,1:10));
@@ -49,8 +49,8 @@ end
 P_f_points = [ R_points(1,:) / sqrt(fibre_alignment); R_points(2,:) * sqrt(fibre_alignment) ];
 O_b = Octave2D( P_f_points / feature_size, 4, roughness, Ps, offsets);
 
-O_b2 = Octave2D( P_f_points / feature_size, 4, roughness, Ps2, offsets);
-O_b3 = Octave2D( P_f_points / feature_size, 4, roughness, Ps3, offsets);
+% O_b2 = Octave2D( P_f_points / feature_size, 4, roughness, Ps2, offsets);
+% O_b3 = Octave2D( P_f_points / feature_size, 4, roughness, Ps3, offsets);
 
 %%% CREATE A LARGE-SCALE PERLIN NOISE PATTERN FOR DENSITY VARIATION
 

@@ -44,6 +44,9 @@ end
 
 % Get the value of the parameter being varied
 param_val = params(strcmp(param_name, {'fibreness', 'fibre_separation', 'patchiness', 'feature_size', 'roughness', 'patch_size', 'fibre_alignment', 'direction'}));
+if param_name == 'threshold'
+    param_val = density;
+end
 
 % Create the requested number of patterns
 for m = 1:N_patterns

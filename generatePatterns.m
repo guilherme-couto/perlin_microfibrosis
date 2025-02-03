@@ -68,7 +68,14 @@ for k = 1:min(10, N_patterns)
    
     % Plot this pattern
     subplot(2,5,k);
-    imagesc(patterns{k}); axis('equal', 'off');
+    imagesc(patterns{k});
+    axis('equal', 'off');
+    title(['D: ', num2str(getPatternDensity(patterns{k}))]);
     colormap(fibroclr);
     
+end
+
+% Save the plot to a file
+saveas(gcf, 'generated_patterns.png');
+
 end

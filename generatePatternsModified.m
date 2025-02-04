@@ -44,26 +44,30 @@ end
 
 % Get the value of the parameter being varied
 param_val = params(strcmp(param_name, {'fibreness', 'fibre_separation', 'patchiness', 'feature_size', 'roughness', 'patch_size', 'fibre_alignment', 'direction'}));
-if param_name == 'threshold'
+if strcmp(param_name, 'threshold') || strcmp(param_name, 'composition')
     param_val = density;
 end
 
 % Create the requested number of patterns
 for m = 1:N_patterns
     
-    % Use the fibre-free generator if NaNs are present in input params
-    % vector, or if only non-fibre parameters provided, otherwise 
-    % use the standard generator
-    if any(isnan(params))
-        [presence, ~, ~] = createFibroPatternNoFibres(mesh, density, params(3:8), permute_tables{m}, offset_tables{m});
-    elseif  length(params) == 6
-        [presence, ~, ~] = createFibroPatternNoFibres(mesh, density, params, permute_tables{m}, offset_tables{m});
+    if strcmp(param_name, 'composition')
+        presence = generatePatternsDensityModified(params, density, 1);
     else
-        [presence, ~, ~, ~] = createFibroPattern(mesh, density, params, permute_tables{m}, offset_tables{m});
+        % Use the fibre-free generator if NaNs are present in input params
+        % vector, or if only non-fibre parameters provided, otherwise 
+        % use the standard generator
+        if any(isnan(params))
+            [presence, ~, ~] = createFibroPatternNoFibres(mesh, density, params(3:8), permute_tables{m}, offset_tables{m});
+        elseif  length(params) == 6
+            [presence, ~, ~] = createFibroPatternNoFibres(mesh, density, params, permute_tables{m}, offset_tables{m});
+        else
+            [presence, ~, ~, ~] = createFibroPattern(mesh, density, params, permute_tables{m}, offset_tables{m});
+        end
     end
     
     % Store this pattern
-    patterns{m} = presence;
+    % patterns{m} = presence;
 
     % Save the pattern as a PNG image silently
     fig = figure('visible', 'off');

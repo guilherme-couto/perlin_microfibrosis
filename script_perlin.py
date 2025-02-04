@@ -37,7 +37,8 @@ params_names_ranges = { 'fibreness': [0.0, 0.4],
                         'fibre_alignment': [0.5, 50.0],
                         'direction': [-np.pi/2, np.pi/2]}
 
-params_names_ranges = { 'threshold': [0.1, 1.0]}
+params_names_ranges = { 'composition': [0.1, 0.9],
+                        'threshold': [0.1, 0.9]}
 
 f_paper =       {'interstitial': 0.3,     'compact': 'NaN',    'diffuse': 'NaN',   'patchy': 0.38}
 L_paper =       {'interstitial': 0.31,    'compact': 'NaN',    'diffuse': 'NaN',   'patchy': 0.31}
@@ -49,9 +50,9 @@ R_paper =       {'interstitial': 1.89,    'compact': 2.47,     'diffuse': 2.17, 
 phi_paper =     {'interstitial': 0.59341, 'compact': -0.15708, 'diffuse': 0.19199, 'patchy': 1.1868}
 density_paper = {'interstitial': 0.096,   'compact': 0.472,    'diffuse': 0.220,   'patchy': 0.269}
 
-num_param_samples = 10
+num_param_samples = 9
 
-num_patterns = 5
+num_patterns = 1
 
 fibros_typenames = ['interstitial', 'compact', 'diffuse', 'patchy']
 for fibro_typename in fibros_typenames:
@@ -85,7 +86,7 @@ for fibro_typename in fibros_typenames:
                 R = param_value
             elif param_name == 'direction':
                 phi = param_value
-            elif param_name == 'threshold':
+            elif param_name == 'threshold' or param_name == 'composition':
                 density = param_value
             else:
                 print(f'Error: parameter unknown {param_name}')

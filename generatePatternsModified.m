@@ -52,7 +52,7 @@ end
 for m = 1:N_patterns
     
     if strcmp(param_name, 'composition')
-        presence = generatePatternsDensityModified(params, density, 1);
+        presence = generatePatternsCompositionModified(params, density, 1);
     else
         % Use the fibre-free generator if NaNs are present in input params
         % vector, or if only non-fibre parameters provided, otherwise 

@@ -36,16 +36,10 @@ load('fibro_seedinfo.mat', 'permute_tables', 'offset_tables');
 % Define a 'fibrosis' colormap
 fibroclr = [[0.95, 0.85, 0.55]; [0.8, 0.2, 0.2]];
 
-% Set the tolerance if it wasn't provided
-if nargin < 4
-    tolerance = 0.005;
-end
-
 % Create the mesh if one wasn't provided (uses values from paper)
 if nargin < 5
     mesh = buildMesh(250, 400, 1/136);
 end
-
 
 % Create a folder to save the images
 output_folder = 'generated_patterns_composition';
@@ -86,7 +80,7 @@ for m = 1:N_patterns
     else
         threshold = 0.01;
     end
-    seed = initial_seed;
+    seed = getFeasibleSeed(initial_seed);
     if any(isnan(params))
         [presence, ~, ~] = createFibroPatternNoFibresModified(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
     elseif  length(params) == 6
@@ -166,7 +160,7 @@ for m = 1:N_patterns
                 threshold = 0.01;
             end
             if any(isnan(params))
-                [presence, ~, ~] = createFibroPatternNoFibresModified(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
+                [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
             elseif  length(params) == 6
                 [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
             else

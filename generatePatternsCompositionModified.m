@@ -36,11 +36,6 @@ load('fibro_seedinfo.mat', 'permute_tables', 'offset_tables');
 % Define a 'fibrosis' colormap
 fibroclr = [[0.95, 0.85, 0.55]; [0.8, 0.2, 0.2]];
 
-% Set the tolerance if it wasn't provided
-if nargin < 4
-    tolerance = 0.005;
-end
-
 % Create the mesh if one wasn't provided (uses values from paper)
 if nargin < 5
     mesh = buildMesh(250, 400, 1/136);
@@ -49,9 +44,12 @@ end
 % Create the requested number of patterns
 for m = 1:N_patterns
 
-    % Initialise the patterns storage
-    patterns{m} = {};
-    seeds{m} = {};
+    % Initialise counters
+    initial_seed = m;
+    restart_counter = 0;
+    tries_counter = 0;
+    max_tries = 10;
+    iterations = 0;
     
     % Use the fibre-free generator if NaNs are present in input params
     % vector, or if only non-fibre parameters provided, otherwise 
@@ -63,9 +61,9 @@ for m = 1:N_patterns
     else
         threshold = 0.01;
     end
-    seed = m;
+    seed = getFeasibleSeed(initial_seed);
     if any(isnan(params))
-        [presence, ~, ~] = createFibroPatternNoFibresModified(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
+        [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
     elseif  length(params) == 6
         [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
     else
@@ -76,9 +74,9 @@ for m = 1:N_patterns
     actual_density = getPatternDensity(presence);
 
     % While the density is not the desired one, keep generating patterns and summing them
-    max_iterations = 10;
-    iteration = 0;
     while abs(actual_density - density) > tolerance
+
+        iterations = iterations + 1;
 
         % Use the fibre-free generator if NaNs are present in input params
         % vector, or if only non-fibre parameters provided, otherwise 
@@ -91,7 +89,7 @@ for m = 1:N_patterns
         else
             threshold = 0.01;
         end
-        seed = randi([1, 250]);
+        seed = getFeasibleSeed(initial_seed + iterations);
         if any(isnan(params))
             [aux_presence, ~, ~] = createFibroPatternNoFibresModified(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
         elseif  length(params) == 6
@@ -107,17 +105,18 @@ for m = 1:N_patterns
         % Get the density of the sum of the patterns
         aux_density = getPatternDensity(aux_presence);
 
-        iteration = iteration + 1;
+        % Update the tries counter
+        tries_counter = tries_counter + 1;
 
         % Only update the presence if the density obtained is less than the desired density 
         if aux_density < density+tolerance
             presence = aux_presence;
             actual_density = aux_density;
-            iteration = 0;
+            tries_counter = 0;
         end
 
-        % If the number of iterations is greater than the maximum number of iterations, restart the presence
-        if iteration > max_iterations
+        % If the number of tries is greater than the maximum number of tries, restart the presence
+        if tries_counter > max_tries
 
             % Use the fibre-free generator if NaNs are present in input params
             if density > 0.1
@@ -135,10 +134,36 @@ for m = 1:N_patterns
                 [presence, ~, ~, ~] = createFibroPattern(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
             end
             actual_density = getPatternDensity(presence);
-            iteration = 0;
-
+            tries_counter = 0;
         end
     end
 end
 
 end
+
+function feasible_seed = getFeasibleSeed(seed)
+    % This function returns a feasible seed for the random number generator
+    % based on the provided seed. If the seed is greater than 250, it returns
+    % the remainder of the division by 250. If the seed is less than 1, it
+    % returns 1.
+    %
+    % INPUTS:
+    %
+    % seed - the seed to be checked
+    %
+    % OUTPUTS:
+    %
+    % feasible_seed - the feasible seed to be used
+    
+    if seed > 250
+        feasible_seed = mod(seed, 250);
+        if feasible_seed == 0
+            feasible_seed = 1;
+        end
+    elseif seed < 1
+        feasible_seed = 1;
+    else
+        feasible_seed = seed;
+    end
+    
+    end

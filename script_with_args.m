@@ -10,7 +10,5 @@ density = str2double(argv(){4});
 N_patterns = argv(){5};
 fibro_typename = argv(){6};
 
-% disp(N_patterns);
-
 % Call main function
 generatePatternsModified(params, param_name, density, N_patterns, fibro_typename);

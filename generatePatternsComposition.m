@@ -7,7 +7,7 @@ function patterns = generatePatternsComposition(params, density, N_patterns, tol
 % params - the parameter values for the generator to use (1x8 vector)
 % density - density of fibrosis in the patterns to be generated
 % N_patterns - the number of patterns to generate
-% (tolerance) - optional tolerance for density matching (default 0.005)
+% tolerance - tolerance for density matching
 % (mesh) - optionally provided mesh to specify size of patterns
 %
 % PARAMETER INFORMATION:
@@ -30,9 +30,6 @@ function patterns = generatePatternsComposition(params, density, N_patterns, tol
 % 8 - DIRECTION: An angle (in radians) defining the orientation of fibres
 %     and/or feature anisotropy
 
-% Load in the seed data
-load('fibro_seedinfo.mat', 'permute_tables', 'offset_tables');
-
 % Define a 'fibrosis' colormap
 fibroclr = [[0.95, 0.85, 0.55]; [0.8, 0.2, 0.2]];
 
@@ -41,18 +38,12 @@ if nargin < 5
     mesh = buildMesh(250, 400, 1/136);
 end
 
-% Create a folder to save the images
-output_folder = 'generated_patterns_composition';
-if ~exist(output_folder, 'dir')
-    mkdir(output_folder);
-end
-
 % Variable to store each pattern used to generate the desired patterns
 patterns = cell(N_patterns, 1);
 seeds = cell(N_patterns, 1);
 
 % Initialise a figure to plot some of the patterns
-figure('Units', 'Normalized', 'OuterPosition', [0 0 1 1]);
+figure('Units', 'Normalized', 'OuterPosition', [0 0 1 1], 'Visible', 'off');
 num_plots_y = round(sqrt(N_patterns));
 num_plots_x = ceil(N_patterns/num_plots_y);
 
@@ -60,7 +51,7 @@ num_plots_x = ceil(N_patterns/num_plots_y);
 for m = 1:N_patterns
 
     % Initialise counters
-    initial_seed = m;
+    initial_seed = m * 10; % x10 to avoid seed repetition in composition  
     restart_counter = 0;
     tries_counter = 0;
     max_tries = 10;
@@ -73,20 +64,15 @@ for m = 1:N_patterns
     % Use the fibre-free generator if NaNs are present in input params
     % vector, or if only non-fibre parameters provided, otherwise 
     % use the standard generator
-    if density > 0.1
-        threshold = 0.1;
-    elseif density > 0.05
-        threshold = 0.05;
-    else
-        threshold = 0.01;
-    end
-    seed = getFeasibleSeed(initial_seed);
+    threshold = getThreshold(density);
+    seed = initial_seed;
+    [permute_table, offset_table] = generateTables(seed);
     if any(isnan(params))
-        [presence, ~, ~] = createFibroPatternNoFibresModified(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
+        [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params(3:8), permute_table, offset_table);
     elseif  length(params) == 6
-        [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
+        [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_table, offset_table);
     else
-        [presence, ~, ~, ~] = createFibroPattern(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
+        [presence, ~, ~, ~] = createFibroPattern(mesh, threshold, params, permute_table, offset_table);
     end
 
     % Get the density of the pattern generated
@@ -101,25 +87,17 @@ for m = 1:N_patterns
 
         iterations = iterations + 1;
 
-        % Use the fibre-free generator if NaNs are present in input params
-        % vector, or if only non-fibre parameters provided, otherwise 
-        % use the standard generator
+        % Generate a new pattern
         abs_diff = abs(actual_density - density);
-        if abs_diff > 0.1
-            threshold = 0.1;
-        elseif abs_diff > 0.05
-            threshold = 0.05;
-        else
-            threshold = 0.01;
-        end
-        % seed = randi([1, 250]);
-        seed = getFeasibleSeed(initial_seed + iterations);
+        threshold = getThreshold(abs_diff);
+        seed = initial_seed + iterations;
+        [permute_table, offset_table] = generateTables(seed);
         if any(isnan(params))
-            [aux_presence, ~, ~] = createFibroPatternNoFibresModified(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
+            [aux_presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params(3:8), permute_table, offset_table);
         elseif  length(params) == 6
-            [aux_presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
+            [aux_presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_table, offset_table);
         else
-            [aux_presence, ~, ~, ~] = createFibroPattern(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
+            [aux_presence, ~, ~, ~] = createFibroPattern(mesh, threshold, params, permute_table, offset_table);
         end
 
         % Sum the patterns
@@ -151,20 +129,14 @@ for m = 1:N_patterns
             patterns{m} = {};
             seeds{m} = {};
 
-            % Use the fibre-free generator if NaNs are present in input params
-            if density > 0.1
-                threshold = 0.1;
-            elseif density > 0.05
-                threshold = 0.05;
-            else
-                threshold = 0.01;
-            end
+            % Generate a new pattern
+            threshold = getThreshold(density);
             if any(isnan(params))
-                [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params(3:8), permute_tables{seed}, offset_tables{seed});
+                [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params(3:8), permute_table, offset_table);
             elseif  length(params) == 6
-                [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
+                [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params, permute_table, offset_table);
             else
-                [presence, ~, ~, ~] = createFibroPattern(mesh, threshold, params, permute_tables{seed}, offset_tables{seed});
+                [presence, ~, ~, ~] = createFibroPattern(mesh, threshold, params, permute_table, offset_table);
             end
             actual_density = getPatternDensity(presence);
             tries_counter = 0;
@@ -184,33 +156,54 @@ for m = 1:N_patterns
     colormap(fibroclr);
 end
 
-% Save the figure (by Guilherme)
-saveas(gcf, fullfile(output_folder, 'patterns.png'));
+% Create folders to save the images
+output_folder = 'generated_patterns_composition';
+if ~exist(output_folder, 'dir')
+    mkdir(output_folder);
+end
 
-% Open file to save seeds used to generate the patterns
-seed_file = fullfile(output_folder, 'pattern_seeds.txt');
-fid = fopen(seed_file, 'w');
-fprintf(fid, 'Pattern Number | Seed Used\n');
+samples_folder = fullfile(output_folder, 'composition_samples');
+if ~exist(samples_folder, 'dir')
+    mkdir(samples_folder);
+end
+
+gifs_folder = fullfile(output_folder, 'composition_gifs');
+if ~exist(gifs_folder, 'dir')
+    mkdir(gifs_folder);
+end
+
+seeds_folder = fullfile(output_folder, 'composition_seeds');
+if ~exist(seeds_folder, 'dir')
+    mkdir(seeds_folder);
+end
+
+fibrosis_pattern_folder = fullfile(output_folder, 'fibrosis_patterns');
+if ~exist(fibrosis_pattern_folder, 'dir')
+    mkdir(fibrosis_pattern_folder);
+end
+
+% Save the figure (by Guilherme)
+saveas(gcf, fullfile(output_folder, ['patterns_', num2str(N_patterns), '.png']));
 
 % Save the presences and the seeds used to generate the patterns
 for m = 1:N_patterns
     % GIF filename
-    gif_filename = fullfile(output_folder, ['pattern_', num2str(m), '.gif']);
+    gif_filename = fullfile(gifs_folder, ['pattern_', num2str(m), '.gif']);
 
     % Loop para salvar os frames do GIF
     for n = 1:length(patterns{m})
-        % Criar a figura do padrão atual
+        % Create figure to save the pattern image
         fig = figure('Visible', 'off');
         imagesc(patterns{m}{n});
         axis('equal', 'off');
         title(['Pattern ', num2str(m), ' - Density: ', num2str(getPatternDensity(patterns{m}{n}))]);
         colormap(fibroclr);
-        saveas(gcf, fullfile(output_folder, ['pattern_', num2str(m), '_presence_', num2str(n), '.png']));
+        saveas(gcf, fullfile(samples_folder, ['pattern_', num2str(m), '_presence_', num2str(n), '.png']));
         
-        % Capturar o frame da imagem
-        img = imread(fullfile(output_folder, ['pattern_', num2str(m), '_presence_', num2str(n), '.png']));
+        % Read the image
+        img = imread(fullfile(samples_folder, ['pattern_', num2str(m), '_presence_', num2str(n), '.png']));
         
-        % Salvar no GIF (se for o primeiro frame, cria o arquivo, senão adiciona)
+        % Save to GIF
         if n == 1
             imwrite(img, gif_filename, 'gif', 'Loopcount', inf, 'DelayTime', 0.5);
             colormap(fibroclr);
@@ -219,11 +212,15 @@ for m = 1:N_patterns
             colormap(fibroclr);
         end
         
-        % Fechar a figura
         close(fig);
     end
     close(gif_filename);
+
     % Save the seeds used to generate the patterns
+    % Open file to save seeds used to generate the patterns
+    seed_file = fullfile(seeds_folder, ['pattern_', num2str(m), '_seeds.txt']);
+    fid = fopen(seed_file, 'w');
+    fprintf(fid, 'Pattern Number | Seed Used\n');
     for n = 1:length(seeds{m})
         if n == 1
             fprintf(fid, '%d | %d\n', m, seeds{m}{n});
@@ -234,36 +231,67 @@ for m = 1:N_patterns
             fprintf(fid, '(Total: %d)\n', length(seeds{m}));
         end
     end
+    fclose(fid);
+
+    % Save the resulting patterns as images
+    fig = figure('Visible', 'off');
+    imagesc(patterns{m}{end});
+    axis('equal', 'off');
+    title(['Pattern ', num2str(m), ' - Density: ', num2str(getPatternDensity(patterns{m}{end}))]);
+    colormap(fibroclr);
+    saveas(gcf, fullfile(fibrosis_pattern_folder, ['fibrosis_pattern_', num2str(m), '.png']));
+    close(fig);
 end
 
-% Close the file
-fclose(fid);
+fprintf('Patterns generated successfully! Files saved in the %s folder.\n', output_folder);
 
 end
 
-function feasible_seed = getFeasibleSeed(seed)
-% This function returns a feasible seed for the random number generator
-% based on the provided seed. If the seed is greater than 250, it returns
-% the remainder of the division by 250. If the seed is less than 1, it
-% returns 1.
+function [permute_table, offset_table] = generateTables(seed)
+% This function generates the permutation and offset tables for the provided seed.
 %
 % INPUTS:
 %
-% seed - the seed to be checked
+% seed - the seed to be used for the random number generator
 %
 % OUTPUTS:
 %
-% feasible_seed - the feasible seed to be used
+% permute_table - the permutation table generated
+% offset_table - the offset table generated
 
-if seed > 250
-    feasible_seed = mod(seed, 250);
-    if feasible_seed == 0
-        feasible_seed = 1;
-    end
-elseif seed < 1
-    feasible_seed = 1;
+% Set the seed for the random number generator
+rng(seed);
+
+% Assume a decent safe number like eight for the number of offsets
+N_freqs = 8;
+
+% Permutation tables for this seed
+for j = 1:N_freqs
+    permute_table(j,:) = int32(randperm(256) - 1);
+end
+
+% Offset table for this seed
+offset_table = rand(N_freqs, 2) - 0.5;
+    
+end
+
+function threshold = getThreshold(density)
+% This function returns the threshold to be used for the density of the pattern.
+%
+% INPUTS:
+%
+% density - the density of the pattern to be generated
+%
+% OUTPUTS:
+%
+% threshold - the threshold to be used for the density of the pattern
+
+if density > 0.1
+    threshold = 0.1;
+elseif density > 0.05
+    threshold = 0.05;
 else
-    feasible_seed = seed;
+    threshold = 0.01;
 end
 
 end

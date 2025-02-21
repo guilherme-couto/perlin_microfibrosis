@@ -1,0 +1,8 @@
+Uncertainty Quantification Statistics with 2886 seeds
+
+Threshold 80%:
+  mean_major_axis: 172.51779115776023
+  std_major_axis: 34.12222623211984
+  mean_minor_axis: 71.13121046475563
+  std_minor_axis: 21.258901050552353
+

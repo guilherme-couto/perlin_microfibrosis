@@ -5,7 +5,7 @@ import imageio.v2
 
 # This script generates fibrosis patterns using the Perlin noise generator
 def execute_fibrosis_generator(params, param_name, density, N_patterns, fibro_typename):
-    command = f"octave --no-gui -q -f ./script_with_args.m -- '{params}' {param_name} {density} {N_patterns} {fibro_typename}"
+    command = f"octave --no-gui --no-window-system --silent ./script_with_args.m -- '{params}' {param_name} {density} {N_patterns} {fibro_typename}"
     print(f'Running command {command}')
     subprocess.run(command, shell=True)
 

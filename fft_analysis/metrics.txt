@@ -1,0 +1,68 @@
+Seed: 4
+	Threshold: 10%
+		Major Axis: 11.98
+		Minor Axis: 6.35
+		Orientation: 59.94
+
+	Threshold: 50%
+		Major Axis: 66.84
+		Minor Axis: 20.39
+		Orientation: 56.74
+
+	Threshold: 80%
+		Major Axis: 163.49
+		Minor Axis: 60.64
+		Orientation: 55.51
+
+
+Seed: 2
+	Threshold: 10%
+		Major Axis: 24.07
+		Minor Axis: 5.51
+		Orientation: 58.12
+
+	Threshold: 50%
+		Major Axis: 59.03
+		Minor Axis: 22.31
+		Orientation: 56.32
+
+	Threshold: 80%
+		Major Axis: 154.33
+		Minor Axis: 61.63
+		Orientation: 54.79
+
+
+Seed: 3
+	Threshold: 10%
+		Major Axis: 13.61
+		Minor Axis: 7.01
+		Orientation: 60.37
+
+	Threshold: 50%
+		Major Axis: 56.14
+		Minor Axis: 20.75
+		Orientation: 57.05
+
+	Threshold: 80%
+		Major Axis: 149.03
+		Minor Axis: 56.63
+		Orientation: 53.84
+
+
+Seed: 1
+	Threshold: 10%
+		Major Axis: 22.90
+		Minor Axis: 5.89
+		Orientation: 49.45
+
+	Threshold: 50%
+		Major Axis: 61.20
+		Minor Axis: 20.95
+		Orientation: 52.08
+
+	Threshold: 80%
+		Major Axis: 160.29
+		Minor Axis: 57.84
+		Orientation: 51.85
+
+

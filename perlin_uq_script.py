@@ -74,7 +74,25 @@ def plot_comparison_with_ellipses(image, spectrum, ellipses, spectrum_title, sav
     
     plt.savefig(save_path)
     plt.close()
-
+    
+def plot_convergence(stats_history, power_thresholds, save_path):
+    """Plota os gráficos de convergência para cada métrica."""
+    metric_labels = ['major_axis', 'minor_axis']
+    num_metrics = len(metric_labels)
+    fig, axs = plt.subplots(num_metrics, 1, figsize=(12, 8))
+    
+    for row, metric in enumerate(metric_labels):
+        for threshold in power_thresholds:
+            values = [stats[threshold][f'mean_{metric}'] for stats in stats_history]
+            axs[row].plot(range(1, len(values) + 1), values, marker='.', label=f'{threshold}%')
+            axs[row].set_title(f'{metric}')
+            axs[row].set_xlabel('Number of Seeds')
+            axs[row].set_ylabel('Mean Value')
+    
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+    
 def save_comparison_plots(cropped_image, power_spectrum, smoothed_spectrum, ellipses, seed, base_folder):
     # Criar diretórios para salvar imagens
     os.makedirs(f"{base_folder}/spectra", exist_ok=True)
@@ -147,7 +165,8 @@ def extract_ellipse_metrics(smoothed_spectrum, power_thresholds):
 
 def is_evaluation_done(csv_path, seed, density, power_thresholds):
     """Verifica se as métricas para a semente já foram extraídas."""
-    if not os.path.exists(csv_path):
+    # If the file does not exist or just has the header, return False
+    if not os.path.exists(csv_path) or os.stat(csv_path).st_size == 0:
         return False, power_thresholds
 
     missing_thresholds = power_thresholds
@@ -164,7 +183,7 @@ def is_evaluation_done(csv_path, seed, density, power_thresholds):
     return False, missing_thresholds
 
 def compute_statistics(csv_path, power_thresholds):
-    """Calcula a média e o desvio padrão das métricas para cada power_threshold."""
+    # Calculate mean and standard deviation for major and minor axis for each threshold
     data = {threshold: {'major_axis': [], 'minor_axis': []} for threshold in power_thresholds}
     
     with open(csv_path, "r") as f:
@@ -175,49 +194,49 @@ def compute_statistics(csv_path, power_thresholds):
                 data[threshold]['major_axis'].append(float(row['major_axis']))
                 data[threshold]['minor_axis'].append(float(row['minor_axis']))
     
+    # Compute statistics
     stats = {}
     for threshold, metrics in data.items():
-        stats[threshold] = {
-            'mean_major_axis': np.mean(metrics['major_axis']),
-            'std_major_axis': np.std(metrics['major_axis']),
-            'mean_minor_axis': np.mean(metrics['minor_axis']),
-            'std_minor_axis': np.std(metrics['minor_axis']),
-        }
+        if threshold not in stats:
+            stats[threshold] = {}
+        for metric in metrics.keys():
+            if metric not in stats[threshold]:
+                stats[threshold][metric] = {}
+            values = metrics[metric]
+            stats[threshold][metric]['mean'] = np.mean(values)
+            stats[threshold][metric]['std'] = np.std(values, ddof=1)
+            stats[threshold][metric]['cv'] = np.std(values, ddof=1) / np.mean(values)
+            stats[threshold][metric]['min'] = np.min(values)
+            stats[threshold][metric]['max'] = np.max(values)
+            stats[threshold][metric]['median'] = np.median(values)
+            stats[threshold][metric]['q1'] = np.percentile(values, 25)
+            stats[threshold][metric]['q3'] = np.percentile(values, 75)
+            stats[threshold][metric]['iqr'] = np.percentile(values, 75) - np.percentile(values, 25)
+            
     return stats
 
-def check_convergence(stats_history, tolerance=0.005):
-    """Verifica se a convergência foi atingida considerando variação menor que tolerancia"""
-    if len(stats_history) < 5:
+def check_convergence(stats_history, tolerance=0.01):
+    # Check if there are at least two sets of statistics to compare
+    if len(stats_history) < 2:
         return False
 
     prev_stats = stats_history[-2]
     curr_stats = stats_history[-1]
     
+    # Check if the mean and standard deviation for each metric are within the tolerance
     for threshold in prev_stats.keys():
-        for key in prev_stats[threshold].keys():
-            prev_value = prev_stats[threshold][key]
-            curr_value = curr_stats[threshold][key]
-            if abs(curr_value - prev_value) > tolerance or curr_value == prev_value:
+        for metric in prev_stats[threshold].keys():
+            prev_mean = prev_stats[threshold][metric]['mean']
+            curr_mean = curr_stats[threshold][metric]['mean']
+            prev_std = prev_stats[threshold][metric]['std']
+            curr_std = curr_stats[threshold][metric]['std']
+            
+            # While mean or standard deviation above the tolerance, return False
+            if abs(prev_mean - curr_mean) / (prev_mean + 1e-8) > tolerance:
+                return False
+            if abs(prev_std - curr_std) / (prev_mean + 1e-8) > tolerance:
                 return False
     return True
-
-def plot_convergence(stats_history, power_thresholds, save_path):
-    """Plota os gráficos de convergência para cada métrica."""
-    metric_labels = ['major_axis', 'minor_axis']
-    num_metrics = len(metric_labels)
-    fig, axs = plt.subplots(num_metrics, 1, figsize=(12, 8))
-    
-    for row, metric in enumerate(metric_labels):
-        for threshold in power_thresholds:
-            values = [stats[threshold][f'mean_{metric}'] for stats in stats_history]
-            axs[row].plot(range(1, len(values) + 1), values, marker='.', label=f'{threshold}%')
-            axs[row].set_title(f'{metric}')
-            axs[row].set_xlabel('Number of Seeds')
-            axs[row].set_ylabel('Mean Value')
-    
-    plt.tight_layout()
-    plt.savefig(save_path)
-    plt.close()
 
 def main():
     # Base folder
@@ -226,13 +245,8 @@ def main():
 
     images_folder = f"{base_folder}/fibrosis_patterns"
     
-    csv_path = f"{base_folder}/ellipses_metrics.csv"
-    # Check if the file already exists, if not, create it and write the header, otherwise append the new data
-    if not os.path.exists(csv_path):
-        with open(csv_path, "w") as f:
-            f.write("seed,density,power_threshold,major_axis,minor_axis,orientation\n")
-
-    stats_file = f"{base_folder}/uncertainty_stats.txt"
+    os.makedirs(f"{base_folder}/ellipses_metrics", exist_ok=True)
+    os.makedirs(f"{base_folder}/uncertainty_stats", exist_ok=True)
 
     params = '[0.38, 0.31, 0.42, 0.32, 0.78, 2.1, 2.5, 1.18680]'
     density = 0.269
@@ -240,71 +254,86 @@ def main():
     save_plots = False
 
     total_seeds = 10000
+    seeds_interval = np.arange(100, total_seeds + 1, 100)
     stats_history = []
     
-    for seed in range(1, total_seeds + 1):
+    for num_seeds in seeds_interval:
+        # Create file to store the ellipses metrics
+        csv_path = f"{base_folder}/ellipses_metrics/ellipses_metrics_{num_seeds}.csv"
+        if not os.path.exists(csv_path):
+            with open(csv_path, "w") as f:
+                f.write("seed,density,power_threshold,major_axis,minor_axis,orientation\n")
         
+        # Else, load the file and check if the number of seeds (lines) is equal to the current number of seeds multiplied by the number of thresholds
+        else:
+            with open(csv_path, "r") as f:
+                num_lines = sum(1 for line in f)
+            if num_lines == num_seeds * len(power_thresholds) + 1:
+                print(f"File {csv_path} already contains {num_seeds} seeds evaluated for {len(power_thresholds)} thresholds. Skipping...")
+                
+                # Compute statistics and check convergence
+                stats = compute_statistics(csv_path, power_thresholds)
+                stats_history.append(stats)
+                if check_convergence(stats_history):
+                    print(f'Convergence reached after evaluating {num_seeds} seeds.')
+                    break
+                continue
+            else:
+                with open(csv_path, "w") as f:
+                    f.write("seed,density,power_threshold,major_axis,minor_axis,orientation\n")
+                
+        stats_file = f"{base_folder}/uncertainty_stats/uncertainty_stats_{num_seeds}.txt"
+        
+        # Generate random seeds
+        seeds = np.random.randint(1, 100000, num_seeds)
+        
+        for seed in seeds:
+            # Check if the evaluation has already been done for the current seed and thresholds
+            evaluation_done, missing_thresholds = is_evaluation_done(csv_path, seed, density, power_thresholds)
+            if evaluation_done:
+                print(f"Seed {seed} has already been evaluated for density {density}. See {csv_path}. Skipping...")
+                continue
+            
+            # Execute fibrosis generator
+            execute_fibrosis_generator(params, density, seed)
+            
+            # Load image
+            image_path = f"{images_folder}/fibrosis_pattern_{seed}.png"
+            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            
+            # Remove pattern image to save memory
+            os.remove(image_path)
+            
+            # Remove white border from image, compute FFT2 and smooth the spectrum
+            cropped_image = remove_white_border(image)
+            power_spectrum = compute_fft2(cropped_image)
+            smoothed_spectrum = smooth_spectrum(power_spectrum)
+            
+            # Extract ellipse metrics and save them to a CSV file
+            ellipses = extract_ellipse_metrics(smoothed_spectrum, missing_thresholds)
+            save_ellipses_metrics(seed, density, ellipses, csv_path)
+
+            if save_plots:
+                save_comparison_plots(cropped_image, power_spectrum, smoothed_spectrum, ellipses, seed, base_folder)
+                
         # Compute statistics and check convergence
         stats = compute_statistics(csv_path, power_thresholds)
+        with open(stats_file, "w") as f:
+            f.write(f"Uncertainty Quantification Statistics with {seed} seeds\n\n")
+            for threshold, metrics in stats.items():
+                f.write(f"Threshold {threshold}%:\n")
+                for key, value in metrics.items():
+                    f.write(f"  {key}: {value}\n")
+                f.write("\n")
+                
         stats_history.append(stats)
-        
         if check_convergence(stats_history):
-            print(f'Convergence reached after {seed} seeds.')
+            print(f'Convergence reached after evaluating {num_seeds} seeds.')
             break
 
-        # Generate a random density value using seed as the random seed
-        # np.random.seed(seed)
-        # density = np.random.uniform(0.1, 0.9)
-
-        # Check if the evaluation has already been done for the current seed and thresholds
-        evaluation_done, missing_thresholds = is_evaluation_done(csv_path, seed, density, power_thresholds)
-        if evaluation_done:
-            print(f"Seed {seed} has already been evaluated, see {csv_path}. Skipping...")
-            continue
-
-        # Execute fibrosis generator
-        execute_fibrosis_generator(params, density, seed)
-        
-        # Load image
-        image_path = f"{images_folder}/fibrosis_pattern_{seed}.png"
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
-        # Remove pattern image to save memory
-        os.remove(image_path)
-
-        # Remove white border from image, compute FFT2 and smooth the spectrum
-        cropped_image = remove_white_border(image)
-        power_spectrum = compute_fft2(cropped_image)
-        smoothed_spectrum = smooth_spectrum(power_spectrum)
-        
-        # Extract ellipse metrics and save them to a CSV file
-        ellipses = extract_ellipse_metrics(smoothed_spectrum, missing_thresholds)
-        save_ellipses_metrics(seed, density, ellipses, csv_path)
-
-        if save_plots:
-            save_comparison_plots(cropped_image, power_spectrum, smoothed_spectrum, ellipses, seed, base_folder)
-
-        # If seed is a multiple of 100, print the current progress
-        if seed % 100 == 0:
-            print(f'Processed {seed} seeds...')
-            plot_convergence(stats_history, power_thresholds, f"{base_folder}/convergence_plot.png")
-            with open(stats_file, "w") as f:
-                f.write(f"Uncertainty Quantification Statistics with {seed} seeds\n\n")
-                for threshold, metrics in stats.items():
-                    f.write(f"Threshold {threshold}%:\n")
-                    for key, value in metrics.items():
-                        f.write(f"  {key}: {value}\n")
-                    f.write("\n")
-        
+    # Plot convergence graphs and save statistics to a file
     plot_convergence(stats_history, power_thresholds, f"{base_folder}/convergence_plot.png")
-    
-    with open(stats_file, "w") as f:
-        f.write(f"Uncertainty Quantification Statistics with {seed} seeds\n\n")
-        for threshold, metrics in stats.items():
-            f.write(f"Threshold {threshold}%:\n")
-            for key, value in metrics.items():
-                f.write(f"  {key}: {value}\n")
-            f.write("\n")
+    print(f"Statistics and convergence plot saved to {base_folder}.")
     
 if __name__ == "__main__":
     main()

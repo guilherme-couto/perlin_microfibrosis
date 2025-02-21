@@ -1,0 +1,22 @@
+Statistics for major_axis:
+  mean: 172.5178
+  std: 34.1281
+  cv: 0.1978
+  min: 117.8926
+  max: 257.0858
+  median: 159.6952
+  q1: 148.5008
+  q3: 194.7258
+  iqr: 46.2250
+
+Statistics for minor_axis:
+  mean: 71.1312
+  std: 21.2626
+  cv: 0.2989
+  min: 44.9081
+  max: 136.3062
+  median: 62.7190
+  q1: 54.9161
+  q3: 82.4629
+  iqr: 27.5467
+

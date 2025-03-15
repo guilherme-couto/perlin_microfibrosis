@@ -35,7 +35,8 @@ fibroclr = [[0.95, 0.85, 0.55]; [0.8, 0.2, 0.2]];
 
 % Create the mesh if one wasn't provided (uses values from paper)
 if nargin < 5
-    mesh = buildMesh(250, 400, 1/136);
+    %mesh = buildMesh(250, 400, 1/136);
+    mesh = buildMesh(400, 400, 1/100);
 end
 
 % Variable to store each pattern used to generate the desired patterns
@@ -64,7 +65,7 @@ for m = 1:N_patterns
     % Use the fibre-free generator if NaNs are present in input params
     % vector, or if only non-fibre parameters provided, otherwise 
     % use the standard generator
-    threshold = getThreshold(density);
+    threshold = getThreshold(density, tolerance);
     seed = initial_seed;
     [permute_table, offset_table] = generateTables(seed);
     if any(isnan(params))
@@ -89,7 +90,7 @@ for m = 1:N_patterns
 
         % Generate a new pattern
         abs_diff = abs(actual_density - density);
-        threshold = getThreshold(abs_diff);
+        threshold = getThreshold(abs_diff, tolerance);
         seed = initial_seed + iterations;
         [permute_table, offset_table] = generateTables(seed);
         if any(isnan(params))
@@ -130,7 +131,7 @@ for m = 1:N_patterns
             seeds{m} = {};
 
             % Generate a new pattern
-            threshold = getThreshold(density);
+            threshold = getThreshold(density, tolerance);
             if any(isnan(params))
                 [presence, ~, ~] = createFibroPatternNoFibres(mesh, threshold, params(3:8), permute_table, offset_table);
             elseif  length(params) == 6
@@ -152,7 +153,8 @@ for m = 1:N_patterns
     subplot(num_plots_y, num_plots_x, m);
     imagesc(presence);
     axis('equal', 'off');
-    title(['D: ', num2str(actual_density)]);
+    % title(['D: ', num2str(actual_density)]);
+    title(['interstitial']);
     colormap(fibroclr);
 end
 
@@ -275,7 +277,7 @@ offset_table = rand(N_freqs, 2) - 0.5;
     
 end
 
-function threshold = getThreshold(density)
+function threshold = getThreshold(density, tolerance)
 % This function returns the threshold to be used for the density of the pattern.
 %
 % INPUTS:
@@ -286,12 +288,10 @@ function threshold = getThreshold(density)
 %
 % threshold - the threshold to be used for the density of the pattern
 
-if density > 0.1
+if density >= 0.1 - tolerance
     threshold = 0.1;
-elseif density > 0.05
-    threshold = 0.05;
 else
-    threshold = 0.01;
+    threshold = density;
 end
 
 end

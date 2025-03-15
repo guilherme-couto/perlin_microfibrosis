@@ -27,18 +27,15 @@ function [presence, O_b, O_d] = createFibroPatternNoFibres(mesh, density, params
 params = num2cell(params);
 [patchiness, feature_size, roughness, patch_size, fibre_alignment, direction] = deal(params{:});
 
-
 % Create a rotated set of points for the application of anisotropy and
 % creation of fibre-aligned pattern. Stored as two rows for ease of matrix
 % transforms and input into C functions
 R_points = [ [ cos(direction) sin(direction) ]; [-sin(direction), cos(direction)] ] * mesh.points';
 
-
 % Create new permutation tables from the provided by applying it to itself
 for k = 1:size(Ps,1)
     Ps2(k,:) = Ps(k,Ps(k,:)+1);
 end
-
 
 %%% CREATE THE MAIN FIBROSIS DEPOSIT EFFECT
 
@@ -46,14 +43,10 @@ end
 P_f_points = [ R_points(1,:) / sqrt(fibre_alignment); R_points(2,:) * sqrt(fibre_alignment) ];
 O_b = Octave2D( P_f_points / feature_size, 4, roughness, Ps, offsets);
 
-
-
 %%% CREATE A LARGE-SCALE PERLIN NOISE PATTERN FOR DENSITY VARIATION
 
 % Use Octave2D with scaling of point co-ords to attain desired patch_size
 O_d = Octave2D(mesh.points' / patch_size, 3, 0.5, Ps2, offsets);
-
-
 
 %%% TAKE A COMBINATION OF THESE NOISEFIELDS TO GET THE FINAL PATTERN
 noise = O_b + patchiness * O_d;

@@ -1,0 +1,36 @@
+Uncertainty Quantification Statistics with 13100 samples
+
+Threshold 80%:
+Statistics for major_axis:
+  mean: 129.2131
+  std: 18.6609
+  cv: 0.1444
+  min: 106.2513
+  max: 163.2477
+  median: 125.4542
+  q1: 110.4893
+  q3: 147.9026
+  iqr: 37.4133
+
+Statistics for minor_axis:
+  mean: 46.6355
+  std: 10.3560
+  cv: 0.2221
+  min: 36.6716
+  max: 72.3120
+  median: 42.8845
+  q1: 37.4329
+  q3: 52.4273
+  iqr: 14.9944
+
+Statistics for orientation:
+  mean: 0.9638
+  std: 0.0178
+  cv: 0.0184
+  min: 0.9195
+  max: 0.9926
+  median: 0.9720
+  q1: 0.9479
+  q3: 0.9787
+  iqr: 0.0307
+

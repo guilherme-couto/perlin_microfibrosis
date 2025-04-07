@@ -31,7 +31,8 @@ function patterns = generatePatternsComposition(params, density, N_patterns, tol
 %     and/or feature anisotropy
 
 % Define a 'fibrosis' colormap
-fibroclr = [[0.95, 0.85, 0.55]; [0.8, 0.2, 0.2]];
+fibroclr = [[0.95, 0.85, 0.55]; [0.8, 0.2, 0.2]]; % Brown and red
+fibroclr = [[0.1, 0.5, 0.8]; [0.9, 0.5, 0.1]]; % Blue and orange
 
 % Create the mesh if one wasn't provided (uses values from paper)
 if nargin < 5
@@ -153,8 +154,8 @@ for m = 1:N_patterns
     subplot(num_plots_y, num_plots_x, m);
     imagesc(presence);
     axis('equal', 'off');
-    % title(['D: ', num2str(actual_density)]);
-    title(['interstitial']);
+    title(['D: ', num2str(actual_density)], 'FontSize', 18);
+    % title(['interstitial'], 'FontSize', 18);
     colormap(fibroclr);
 end
 
@@ -239,7 +240,7 @@ for m = 1:N_patterns
     fig = figure('Visible', 'off');
     imagesc(patterns{m}{end});
     axis('equal', 'off');
-    title(['Pattern ', num2str(m), ' - Density: ', num2str(getPatternDensity(patterns{m}{end}))]);
+    title(['Pattern ', num2str(m), ' - Density: ', num2str(getPatternDensity(patterns{m}{end}))], 'FontSize', 18);
     colormap(fibroclr);
     saveas(gcf, fullfile(fibrosis_pattern_folder, ['fibrosis_pattern_', num2str(m), '.png']));
     close(fig);

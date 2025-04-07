@@ -3,9 +3,4 @@ Pattern Number | Seed Used
 + | 21
 + | 22
 + | 23
-+ | 24
-+ | 25
-+ | 26
-+ | 27
-+ | 28
-(Total: 9)
+(Total: 4)
